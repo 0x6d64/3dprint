@@ -1,3 +1,6 @@
+# Free CAD backup files
+*.FCBak
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
