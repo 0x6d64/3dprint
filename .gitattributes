@@ -1,1 +1,2 @@
-*.FCStd		binary diff=zip           
+*.FCStd		binary diff=zip
+*.3mf		binary diff=zip
