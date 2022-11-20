@@ -26,7 +26,9 @@ furniture).
   https://www.printables.com/model/316022-wall-hook-for-filament-spool-storage).
 * [keyboard replacement feet](./projects/keyboard_replacement_feet): computer
   keyboards oftentimes have those pop out feet, and they tend to break. This
-  project provides replacement feet for a DELL keyboard.
+  project provides replacement feet for a DELL keyboard. See also the
+  [project on printables.com](
+  https://www.printables.com/model/321140-keyboard-replacement-feet-for-dell-keyboard)
 * [parametric plant saucer](./projects/plant_saucer): a saucer to put under your
   flower pot. The FreeCAD project can be adapted with a lot of parameters to
   fit different needs. See also the [project on printables.com](
