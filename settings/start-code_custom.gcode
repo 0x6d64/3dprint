@@ -4,7 +4,7 @@ M115 U3.11.0 ; tell printer latest fw version
 G90 ; use absolute coordinates
 M83 ; extruder relative mode
 
-M104 S{if first_layer_temperature<220}160{else}180{endif} ; preheat extruder to lower temp
+M104 S{if first_layer_temperature[0]<220}160{else}180{endif} ; preheat extruder to lower temp
 M140 S[first_layer_bed_temperature] ; set bed temp
 M190 S[first_layer_bed_temperature] ; wait for bed temp
 
