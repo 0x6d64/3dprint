@@ -4,14 +4,14 @@ M115 U3.11.0 ; tell printer latest fw version
 G90 ; use absolute coordinates
 M83 ; extruder relative mode
 
-M104 S150 ; preheat extruder to 150
+M104 S{if first_layer_temperature<220}160{else}180{endif} ; preheat extruder to lower temp
 M140 S[first_layer_bed_temperature] ; set bed temp
 M190 S[first_layer_bed_temperature] ; wait for bed temp
 
 G28 W ; home all without mesh bed level
 G80 ; mesh bed leveling
 
-G1 Z30 F700 ; lift nozzle before heating it to final temp
+G1 Z40 F750 ; lift nozzle before heating it to final temp
 M104 S[first_layer_temperature] ; set extruder temp
 M109 S[first_layer_temperature] ; wait for extruder temp
 
