@@ -12,6 +12,8 @@ Note: not all projects that are part of the repo are listed here. Some of them
 I don't consider espescially interesting (e.g. simple wedges to level 
 furniture).
 
+* [beverage can cold marker](./projects/beer-can-cold-marker): a marker to indicate
+  the coldest can of a beverage in your fridge. _no printables upload yet_
 * [cockpit clock enclosure](./projects/cockpit-clock-enclosure): 
   an enclosure in order to put an airplane cockpit 
   clock on your desk. See also the [project on printables.com](
