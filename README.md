@@ -34,6 +34,9 @@ furniture).
 * [LED remote holder](./projects/led-remote-holder): a holder for a LED light
   remote control, see also the [project on printables.com](
   https://www.printables.com/model/332527-led-remote-holder)
+* [remote holder for Philips living colors lamp](
+  ./projects/led-remote-holder-philipps): see also the [project on printables.com](
+  https://www.printables.com/model/348441-holder-for-philips-living-colors-remote)
 * [parametric plant saucer](./projects/plant_saucer): a saucer to put under your
   flower pot. The FreeCAD project can be adapted with a lot of parameters to
   fit different needs. See also the [project on printables.com](
