@@ -23,7 +23,9 @@ furniture).
   [project on printables.com](
   https://www.printables.com/model/317254-small-paper-coffee-filter-holder).
 * [essential oil bottle holder](./projects/essential-oil-holder): a slab with 8
-  holes that serves as a holder for essential oil bottles. This project does not have an entry on printables.com yet.
+  holes that serves as a holder for essential oil bottles. See also
+  [project on printables.com](
+  https://www.printables.com/model/349100-holder-for-essential-oil-bottles).
 * [filament wall hook](./projects/filament-wall-hook): a small part that accepts
   a 32mm PCV pipe in order to keep filament spools. Also see the 
   [project on printables.com](
