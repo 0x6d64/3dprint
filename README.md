@@ -12,16 +12,19 @@ Note: not all projects that are part of the repo are listed here. Some of them
 I don't consider especially interesting (e.g. simple wedges to level 
 furniture).
 
+### Kitchen accessories
 * [beverage can cold marker](./projects/beer-can-cold-marker): a marker to indicate
   the coldest can of a beverage in your fridge. _no printables upload yet_
-* [cockpit clock enclosure](./projects/cockpit-clock-enclosure): 
-  an enclosure in order to put an airplane cockpit 
-  clock on your desk. See also the [project on printables.com](
-  https://www.printables.com/model/292694-cockpit-clock-enclosure).
 * [coffee filter holder](./projects/coffee-filter-holder): a box shaped
   holder to keep small paper coffee filters ready. See also the 
   [project on printables.com](
   https://www.printables.com/model/317254-small-paper-coffee-filter-holder).
+
+### Brackets and holders
+* [cockpit clock enclosure](./projects/cockpit-clock-enclosure): 
+  an enclosure in order to put an airplane cockpit 
+  clock on your desk. See also the [project on printables.com](
+  https://www.printables.com/model/292694-cockpit-clock-enclosure).
 * [essential oil bottle holder](./projects/essential-oil-holder): a slab with 8
   holes that serves as a holder for essential oil bottles. See also
   [project on printables.com](
@@ -30,17 +33,19 @@ furniture).
   a 32mm PCV pipe in order to keep filament spools. Also see the 
   [project on printables.com](
   https://www.printables.com/model/316022-wall-hook-for-filament-spool-storage).
-* [keyboard replacement feet](./projects/keyboard_replacement_feet): computer
-  keyboards oftentimes have those pop out feet, and they tend to break. This
-  project provides replacement feet for a DELL keyboard. See also the
-  [project on printables.com](
-  https://www.printables.com/model/321140-keyboard-replacement-feet-for-dell-keyboard)
 * [LED remote holder](./projects/led-remote-holder): a holder for a LED light
   remote control, see also the [project on printables.com](
   https://www.printables.com/model/332527-led-remote-holder)
 * [remote holder for Philips living colors lamp](
   ./projects/led-remote-holder-philipps): see also the [project on printables.com](
   https://www.printables.com/model/348441-holder-for-philips-living-colors-remote)
+
+### Misc projects
+* [keyboard replacement feet](./projects/keyboard_replacement_feet): computer
+  keyboards oftentimes have those pop out feet, and they tend to break. This
+  project provides replacement feet for a DELL keyboard. See also the
+  [project on printables.com](
+  https://www.printables.com/model/321140-keyboard-replacement-feet-for-dell-keyboard)
 * [parametric plant saucer](./projects/plant_saucer): a saucer to put under your
   flower pot. The FreeCAD project can be adapted with a lot of parameters to
   fit different needs. See also the [project on printables.com](
