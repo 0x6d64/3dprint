@@ -9,7 +9,7 @@ presented here is [CC-BY-SA][ss_by_sa].
 
 ## List of projects
 Note: not all projects that are part of the repo are listed here. Some of them
-I don't consider espescially interesting (e.g. simple wedges to level 
+I don't consider especially interesting (e.g. simple wedges to level 
 furniture).
 
 * [beverage can cold marker](./projects/beer-can-cold-marker): a marker to indicate
