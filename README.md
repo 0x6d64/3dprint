@@ -54,4 +54,7 @@ furniture).
   royal game of ur. Also see the [project on printables.com](
   https://www.printables.com/model/349837-container-for-game-of-ur-material)
 
+### Project ideas
+For a loose collection if ideas see [this file](./project_ideas.md).
+
 [ss_by_sa]: https://creativecommons.org/licenses/by-sa/4.0/
