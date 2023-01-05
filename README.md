@@ -39,6 +39,8 @@ furniture).
 * [remote holder for Philips living colors lamp](
   ./projects/led-remote-holder-philipps): see also the [project on printables.com](
   https://www.printables.com/model/348441-holder-for-philips-living-colors-remote)
+* [under desk drawer for notebook](./projects/under-desk-drawer): a drawer 
+  to keep an A5 notebook.
 
 ### Misc projects
 * [keyboard replacement feet](./projects/keyboard_replacement_feet): computer
