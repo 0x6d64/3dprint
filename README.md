@@ -41,6 +41,8 @@ furniture).
   https://www.printables.com/model/348441-holder-for-philips-living-colors-remote)
 * [under desk drawer for notebook](./projects/under-desk-drawer): a drawer 
   to keep an A5 notebook.
+* [bedside tray](./projects/bedside-tray): a small tray that clamps on the
+  side of the bed for a remote and your glasses.
 
 ### Art and decorative
 * [year review wall art](./projects/year-review-wallart): one printed tile 
