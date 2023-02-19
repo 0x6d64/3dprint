@@ -42,6 +42,10 @@ furniture).
 * [under desk drawer for notebook](./projects/under-desk-drawer): a drawer 
   to keep an A5 notebook.
 
+### Art and decorative
+* [year review wall art](./projects/year-review-wallart): one printed tile 
+  for every day. Look at your wall, and get a feel how you spend your days.
+
 ### Misc projects
 * [keyboard replacement feet](./projects/keyboard_replacement_feet): computer
   keyboards oftentimes have those pop out feet, and they tend to break. This
