@@ -204,7 +204,7 @@ def _archive_and_delete_gcode_in_dir(
     all_gcode_sizes = [f.stat().st_size for f in all_gcode_files if f.is_file()]
 
     if all_gcode_files:
-        with zipfile.ZipFile(archive_name, "w", compression=zipfile.ZIP_LZMA) as arch:
+        with zipfile.ZipFile(archive_name, "a", compression=zipfile.ZIP_LZMA) as arch:
             for g_file in all_gcode_files:
                 arch.write(g_file, arcname=g_file.name)
         _check_archive_for_errors(archive_name)
