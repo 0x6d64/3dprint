@@ -11,6 +11,8 @@ from collections import namedtuple
 from dataclasses import dataclass
 from typing import List, Union
 
+from setuptools.archive_util import _unpack_zipfile_obj
+
 """
 further improvements:
 - complete implementation that compresses old gcode files
@@ -27,9 +29,9 @@ FolderDate = namedtuple("FolderDate", ["year", "month"])
 
 @dataclass
 class CompressionStats:
-    uncompressed: float
-    compressed: float
-    count: int
+    uncompressed: float = 0.0
+    compressed: float = 0.0
+    count: int = 0
 
     @property
     def ratio(self):
@@ -40,11 +42,15 @@ class CompressionStats:
         return self.uncompressed - self.compressed
 
     def __add__(self, other):
+        if other == 0:  # happens when we create a sum of the class
+            other = CompressionStats()
         return CompressionStats(
             uncompressed=self.uncompressed + other.uncompressed,
             compressed=self.compressed + other.compressed,
             count=self.count + other.count,
         )
+
+    __radd__ = __add__
 
 
 def remove_readonly(func, path, excinfo_ignored):
@@ -64,6 +70,11 @@ def sizeof_fmt(num: Union[int, float], suffix="B") -> str:
 def get_parsed_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--basedir", help="basedir for search", required=True)
+    parser.add_argument(
+        "--min-age",
+        help="compress from month folders that are this many months old.",
+        type=int,
+    )
     return parser.parse_args()
 
 
@@ -147,18 +158,23 @@ def get_folder_size(folder: pathlib.Path) -> int:
     return size
 
 
+def _check_archive_for_errors(a: pathlib.Path):
+    with zipfile.ZipFile(a) as arch:
+        archive_check_has_error = arch.testzip()
+        if archive_check_has_error:
+            raise RuntimeError(f"bad zipfile {a}")
+        else:
+            _log.debug(f"success: {str(a)}")
+
+
 def compress_and_delete_folder(input_list: List[pathlib.Path]) -> CompressionStats:
     size_uncompressed, size_compressed = 0.0, 0.0
     for item in input_list:
         archive_path = shutil.make_archive(
             str(item), format="zip", root_dir=str(item), logger=_log
         )
-        with zipfile.ZipFile(archive_path) as arch:
-            archive_check_has_error = arch.testzip()
-            if archive_check_has_error:
-                raise RuntimeError(f"bad zipfile {archive_path}")
-            else:
-                _log.debug(f"success: {str(archive_path)}")
+        _check_archive_for_errors(archive_path)
+
         item_uncompressed = get_folder_size(item)
         item_compressed = pathlib.Path(archive_path).stat().st_size
         _log.debug(
@@ -175,13 +191,64 @@ def compress_and_delete_folder(input_list: List[pathlib.Path]) -> CompressionSta
     )
 
 
+def compress_input_folders(basedir: pathlib.Path, min_age_months=2) -> CompressionStats:
+    input_dirs_to_compress = discover_old_input_directories(basedir)
+    stats = compress_and_delete_folder(input_dirs_to_compress)
+    return stats
+
+
+def _archive_and_delete_gcode_in_dir(
+    input_folder: pathlib.Path, archive_name
+) -> CompressionStats:
+    all_gcode_files = list(input_folder.glob("*.gcode"))
+    all_gcode_sizes = [f.stat().st_size for f in all_gcode_files if f.is_file()]
+
+    if all_gcode_files:
+        with zipfile.ZipFile(archive_name, "w", compression=zipfile.ZIP_LZMA) as arch:
+            for g_file in all_gcode_files:
+                arch.write(g_file, arcname=g_file.name)
+        _check_archive_for_errors(archive_name)
+        s = CompressionStats(
+            uncompressed=sum(all_gcode_sizes),
+            compressed=archive_name.stat().st_size,
+            count=len(all_gcode_files),
+        )
+        for g_file in all_gcode_files:
+            os.remove(g_file)
+    else:  # no gcode file found
+        s = CompressionStats()
+
+    return s
+
+
+def compress_and_delete_gcode_files(
+    basedir: pathlib.Path, min_age_months=2
+) -> CompressionStats:
+    old_month_folders = _get_old_monthly_folders(basedir)
+    compression_stats = []
+    for month_item in old_month_folders:
+        for project__candidate in month_item.iterdir():
+            if not project__candidate.is_dir():
+                continue
+            archive_name = project__candidate.joinpath(
+                f"{project__candidate.stem}-gcodearchive.zip"
+            )
+            c_stat = _archive_and_delete_gcode_in_dir(project__candidate, archive_name)
+            compression_stats.append(c_stat)
+    return sum(compression_stats)
+
+
 def run_main(args: argparse.Namespace):
     basedir = pathlib.Path(args.basedir)
 
-    input_dirs_to_compress = discover_old_input_directories(basedir)
-    stats_input_dirs = compress_and_delete_folder(input_dirs_to_compress)
+    min_age_months = int(args.min_age) if args.min_age else 2
 
-    stats = stats_input_dirs
+    stats_input_dirs = compress_input_folders(basedir, min_age_months=min_age_months)
+    stats_gcode_files = compress_and_delete_gcode_files(
+        basedir, min_age_months=min_age_months
+    )
+
+    stats = stats_input_dirs + stats_gcode_files
 
     _log.info(
         f"found {stats.count} items, compressed to {sizeof_fmt(stats.compressed)}, "
