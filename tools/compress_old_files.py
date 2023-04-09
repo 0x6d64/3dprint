@@ -205,7 +205,11 @@ def _archive_and_delete_gcode_in_dir(
 
     if all_gcode_files:
         with zipfile.ZipFile(archive_name, "a", compression=zipfile.ZIP_LZMA) as arch:
+            files_in_archive = [x.filename for x in arch.filelist]
             for g_file in all_gcode_files:
+                if g_file.name in files_in_archive:
+                    _log.debug(f"file already present: {g_file.name}")
+                    continue
                 arch.write(g_file, arcname=g_file.name)
         _check_archive_for_errors(archive_name)
         s = CompressionStats(
