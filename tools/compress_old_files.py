@@ -24,6 +24,10 @@ class CompressionStats:
     def ratio(self):
         return self.compressed / self.uncompressed if self.uncompressed else None
 
+    @property
+    def saved(self):
+        return self.uncompressed - self.compressed
+
     def __add__(self, other):
         return CompressionStats(
             uncompressed=self.uncompressed + other.uncompressed,
@@ -174,7 +178,7 @@ def run_main(args: argparse.Namespace):
     stats = compress_and_delete(input_dirs_to_compress)
     _log.info(
         f"found {stats.count} items, compressed to {sizeof_fmt(stats.compressed)}, "
-        f"ratio: {100* stats.ratio if stats.ratio else 0.0:2.3}%"
+        f"ratio: {100 * stats.ratio if stats.ratio else 0.0:2.3}% ({sizeof_fmt(stats.saved)} saved)"
     )
 
 
