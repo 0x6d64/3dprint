@@ -224,7 +224,7 @@ def _archive_and_delete_gcode_in_dir(
 def compress_and_delete_gcode_files(
     basedir: pathlib.Path, min_age_months=2
 ) -> CompressionStats:
-    old_month_folders = _get_old_monthly_folders(basedir)
+    old_month_folders = _get_old_monthly_folders(basedir, min_age_months=min_age_months)
     compression_stats = []
     for month_item in old_month_folders:
         for project__candidate in month_item.iterdir():
