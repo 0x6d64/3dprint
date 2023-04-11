@@ -4,7 +4,7 @@
     * https://pypi.org/project/csdt-stl-converter/
     * https://github.com/rmrao/img2stl
     * https://github.com/thearn/stl_tools
-  * maybe use python wrapper around SCAD
+  * maybe use python wrapper around SCAD, see also [this folder](./tools/svg-to-3dprint)
   * bonus points: handle more than one color into different layers
   * application: room labels for work
 * a marble run
