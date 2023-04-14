@@ -62,6 +62,9 @@ furniture).
 * [container for dice and player tokens](projects/misc_projects/urgame-container) for the
   royal game of ur. Also see the [project on printables.com](
   https://www.printables.com/model/349837-container-for-game-of-ur-material)
+* [belt clip for Victorinox Swisstool pouch](projects/misc_projects/swisstool-pocket-clip)
+  A clip that can be quickly attached or detachted to a belt. See also the
+  [project on printables.com](https://www.printables.com/model/440875-victorinox-swisstool-belt-clip)
 
 ### Project ideas
 For a loose collection if ideas see [this file](./project_ideas.md).
