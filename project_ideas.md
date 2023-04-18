@@ -6,7 +6,10 @@
     * https://github.com/thearn/stl_tools
   * maybe use python wrapper around SCAD, see also [this folder](./tools/svg-to-3dprint)
   * bonus points: handle more than one color into different layers
-  * application: room labels for work
+  * application: 
+    * room labels for work
+    * decorative plates, fridge magnets
+    * plates for stamps
 * a marble run
 * a PR counter that counts pull reviews with marbles based on the GitHub API
 * learn how to extrude along paths properly and print big house numbers
