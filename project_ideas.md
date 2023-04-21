@@ -20,3 +20,5 @@
 * a printed holder for hex mirror tiles like [these](https://www.amazon.com/dp/B07DF5W7L6/) in order to create a bent mirror.
   For an example project on reflecting light in a specific pattern
   see this: https://github.com/bencbartlett/3D-printed-mirror-array
+* a printed LED desk lamp with a sleek mechanism to keep it
+  in position
