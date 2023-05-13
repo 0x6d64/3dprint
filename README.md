@@ -49,6 +49,10 @@ furniture).
 * [year review wall art](projects/art_decoration/year-review-wallart): one printed tile 
   for every day. Look at your wall, and get a feel how you spend your days.
 
+### Gridfinity parts
+All [gridfinity](https://gridfinity.xyz/) related parts are located 
+in the folder [/projects/gridfinity](./projects/gridfinity).
+
 ### Misc projects
 * [keyboard replacement feet](projects/misc_projects/keyboard_replacement_feet): computer
   keyboards oftentimes have those pop out feet, and they tend to break. This
