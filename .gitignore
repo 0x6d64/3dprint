@@ -3,6 +3,9 @@
 # Free CAD backup files
 *.FCBak
 
+# dont' track gcode files
+*.gcode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
