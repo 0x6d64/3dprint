@@ -48,6 +48,7 @@ furniture).
 ### Art and decorative
 * [year review wall art](projects/art_decoration/year-review-wallart): one printed tile 
   for every day. Look at your wall, and get a feel how you spend your days.
+* [a simple flower pot](./projects/art_decoration/flower-pot)
 
 ### Gridfinity parts
 All [gridfinity](https://gridfinity.xyz/) related parts are located 
