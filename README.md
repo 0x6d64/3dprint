@@ -43,6 +43,10 @@ furniture).
   holder to keep small paper coffee filters ready. See also the 
   [project on printables.com](
   https://www.printables.com/model/317254-small-paper-coffee-filter-holder).
+* [sprouting jar](projects/kitchen_accessories/sprouting-jar): a plastic
+  cover for glass jars that helps with sprouting seeds. 
+  See also the [project on printables.com](
+  https://www.printables.com/model/736427-sprouting-jar)
 
 
 ### Art and decorative
