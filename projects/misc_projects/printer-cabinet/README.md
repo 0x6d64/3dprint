@@ -1,5 +1,8 @@
 # 3d printer cabinet
-All projects connected with building a printer enclosure.
+All projects connected with building a printer enclosure. It is my spin
+on the idea of combining a IKEA Platsa corpus with a Sindvik glass door;
+unfortunately I don't remember where I saw that approach first and can't
+credit my inspiration.
 
 ## Features
 - glass door, soft close
@@ -12,7 +15,7 @@ All projects connected with building a printer enclosure.
   - should include a simplem method of setting the set temperature e.g. from low...18...65...high
   - should include some kind of control loop, maybe PID controller so that we can react to step inputs like opening the door
 ## Enclosure body
-The body/copus was built from IKEA parts:
+The body/corpus was built from IKEA parts:
 
 - [Platsa](https://www.ikea.com/ro/ro/p/platsa-cadru-alb-50330946/) corpus 60x55x120cm
 - [Sindvik](https://www.ikea.com/ro/ro/p/sindvik-usa-sticla-alb-sticla-transparenta-90291858/) glass door hinge
@@ -23,3 +26,11 @@ The body/copus was built from IKEA parts:
 
 **Note:** the Sindvik door in the Platsa body is kind of a hack, and this is
 why we need to drill our own holes to mount the door. Also: the height of the shelf where the printer sits on is a tiny bit off.
+
+## Sub projects and projects of others used
+
+- [door template](./door-template): a drill template that helped me drill holes into the corpus for attaching the doors. Note: please verify the hole position again yourself before actually drilling them. 
+- cable glands: Here I used [this model](
+  https://www.printables.com/model/114283-cable-gland-all-sizes) to 
+  print a 7.5mm diameter and 10mm long cable gland to give strain relieve 
+  to the power cable (and give the hole a cleaner look).
