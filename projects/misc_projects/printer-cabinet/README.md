@@ -46,3 +46,5 @@ why we need to drill our own holes to mount the door. Also: the height of the sh
 - for the **LED strips**, I designed small **brackets** to hold aluminum channels, plus
   a bracket with a space to hold a switch, see 
   [led-lights-bracket](./led-lights-bracket)
+- I needed a **small holder for a switch**, see [switch-holder](./switch-holder). 
+  I used hot glue to attach the holder to the back of the enclosure
