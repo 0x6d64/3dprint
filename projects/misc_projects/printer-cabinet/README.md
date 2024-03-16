@@ -30,7 +30,7 @@ The body/corpus was built from IKEA parts:
 **Note:** the Sindvik door in the Platsa body is kind of a hack, and this is
 why we need to drill our own holes to mount the door. Also: the height of the shelf where the printer sits on is a tiny bit off.
 
-## Sub projects and projects of others used
+## Subprojects and projects of others used
 
 - [door template](./door-template): a **drill template** that helped me drill holes into 
   the corpus for attaching the doors.
@@ -48,3 +48,15 @@ why we need to drill our own holes to mount the door. Also: the height of the sh
   [led-lights-bracket](./led-lights-bracket)
 - I needed a **small holder for a switch**, see [switch-holder](./switch-holder). 
   I used hot glue to attach the holder to the back of the enclosure
+
+## LED lighting
+The LEDs are wired using a 2 pole, 3 position switch. This means that we can
+have 1 switch position with only 1 LED strip active, and another position
+for full lighting with both strips on:
+
+![img](./_electronics/led-wiring/schematic.PNG)
+Notes:
+- both switch elements in the schematic are mechanically coupled and
+get moved with the same lever.
+- the LED strips are shown as simple LED symbols. The internal resistor
+  is not shown
