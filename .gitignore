@@ -3,6 +3,9 @@
 # Free CAD backup files
 *.FCBak
 
+# KiCAD stores its backup in a folder with -backup suffix and as a zip file
+**/*-backups/*.zip
+
 # dont' track gcode files
 *.gcode
 *.bgcode
