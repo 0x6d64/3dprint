@@ -13,7 +13,7 @@ I don't consider especially interesting (e.g. simple wedges to level
 furniture).
 
 ### Brackets and holders
-* [cockpit clock enclosure](projects/brackets_holders/cockpit-clock-enclosure): 
+* [cockpit clock enclosure](projects/brackets_holders/cockpit-clocks/cockpit-clock-enclosure): 
   an enclosure in order to put an airplane cockpit 
   clock on your desk. See also the [project on printables.com](
   https://www.printables.com/model/292694-cockpit-clock-enclosure).
