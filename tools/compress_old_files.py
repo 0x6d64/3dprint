@@ -200,7 +200,7 @@ def compress_input_folders(basedir: pathlib.Path, min_age_months=2) -> Compressi
 def _archive_and_delete_gcode_in_dir(
     input_folder: pathlib.Path, archive_name
 ) -> CompressionStats:
-    all_gcode_files = list(input_folder.glob("*.gcode"))
+    all_gcode_files = list(input_folder.glob("*.{gcode,bgcode}"))
     all_gcode_sizes = [f.stat().st_size for f in all_gcode_files if f.is_file()]
 
     if all_gcode_files:
