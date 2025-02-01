@@ -68,7 +68,7 @@ in the folder [/projects/gridfinity](./projects/gridfinity).
   flower pot. The FreeCAD project can be adapted with a lot of parameters to
   fit different needs. See also the [project on printables.com](
   https://www.printables.com/model/309976-parametric-plant-saucer).
-* [container for dice and player tokens](projects/misc_projects/urgame-container) for the
+* [container for dice and player tokens](projects/boardgame/urgame-container) for the
   royal game of ur. Also see the [project on printables.com](
   https://www.printables.com/model/349837-container-for-game-of-ur-material)
 * [belt clip for Victorinox Swisstool pouch](projects/misc_projects/swisstool-pocket-clip)
