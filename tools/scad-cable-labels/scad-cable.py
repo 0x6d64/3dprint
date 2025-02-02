@@ -1,6 +1,9 @@
 import argparse
+import concurrent.futures
 import csv
 import json
+import logging
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +12,7 @@ from pathlib import Path
 @dataclass
 class ScadLabel:
     """Class to generate a single cable label."""
+
     text: str
     diameter_mm: float
     font_name: str
@@ -46,7 +50,7 @@ class ScadLabel:
         # fmt: off
         cmd_raw = [
             "openscad",
-            self._scad_param("text", " ".join(self.text)),
+            self._scad_param("text", self.text),
             self._scad_param("cable_dia", float(self.diameter_mm)),
             self._scad_param("font", self.font_name),
             "--enable=textmetrics" if self.enable_textmetrics else None,
@@ -63,7 +67,12 @@ class ScadLabel:
         return success
 
 
-def handle_csv_input(csv_path: str | Path, font: str, output_dir: str):
+def handle_csv_input(
+    csv_path: str | Path,
+    font: str,
+    output_dir: str,
+    threads: int = min(os.cpu_count(), 32),
+):
     with open(csv_path) as fp:
         sniffed_dialect = csv.Sniffer().sniff(fp.read(1024))
         fp.seek(0)
@@ -71,13 +80,24 @@ def handle_csv_input(csv_path: str | Path, font: str, output_dir: str):
             fp, fieldnames=("text", "diameter"), dialect=sniffed_dialect
         )
         label_instances = [
-            ScadLabel(text=c_line["text"],
-                      diameter_mm=c_line["diameter"],
-                      font_name=font) for c_line in reader
+            ScadLabel(
+                text=c_line["text"], diameter_mm=c_line["diameter"], font_name=font
+            )
+            for c_line in reader
         ]
 
-    for label in label_instances:
-        label.generate_stl(output_dir=output_dir)
+    if threads > 0:
+        with concurrent.futures.ThreadPoolExecutor(
+            thread_name_prefix="LabelCreateExecutor", max_workers=threads
+        ) as executor:
+            futures = {
+                executor.submit(label.generate_stl, output_dir)
+                for label in label_instances
+            }
+        concurrent.futures.wait(futures)
+    else:
+        for label in label_instances:
+            label.generate_stl(output_dir)
 
 
 def openscad_binary_found() -> bool:
@@ -121,10 +141,10 @@ def run_main():
     if parsed_args.csv:
         handle_csv_input(parsed_args.csv, parsed_args.font, output_dir)
     else:  # single label mode
+        # text from arguments may be a list if separated by spaces
+        text = " ".join(parsed_args.text)
         label = ScadLabel(
-            text=parsed_args.text,
-            font_name=parsed_args.font,
-            diameter_mm=parsed_args.diameter
+            text=text, font_name=parsed_args.font, diameter_mm=parsed_args.diameter
         )
         label.generate_stl(output_dir)
 
