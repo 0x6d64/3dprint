@@ -117,7 +117,10 @@ def handle_csv_input(
 
 def openscad_binary_found() -> bool:
     """Return True if the binary was found."""
-    ret = subprocess.run(["openscad", "--version"], capture_output=True)
+    try:
+        ret = subprocess.run(["openscad", "--version"], capture_output=True)
+    except FileNotFoundError:
+        return False
     binary_found = "OpenSCAD" in str(ret.stderr) and ret.returncode == 0
     if binary_found:
         logger.info(f"found this SCAD: {ret.stderr.decode().strip()}")
