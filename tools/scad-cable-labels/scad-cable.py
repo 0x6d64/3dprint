@@ -1,12 +1,16 @@
 import argparse
 import concurrent.futures
 import csv
+import datetime as dt
 import json
 import logging
 import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -60,6 +64,7 @@ class ScadLabel:
             self.scad_file,
         ]
         # fmt: on
+        logger.info(f"generating {self._get_output_path(output_dir)}")
         ret = subprocess.run(self._get_flattended_cmd(cmd_raw), capture_output=True)
         success = 0 == ret.returncode
         _out, _err = ret.stdout.decode(), ret.stderr.decode()
@@ -74,6 +79,7 @@ def handle_csv_input(
     threads: int = min(os.cpu_count(), 32),
 ):
     with open(csv_path) as fp:
+        logger.info(f"processing file {csv_path}")
         sniffed_dialect = csv.Sniffer().sniff(fp.read(1024))
         fp.seek(0)
         reader = csv.DictReader(
@@ -85,8 +91,11 @@ def handle_csv_input(
             )
             for c_line in reader
         ]
+    logger.info(f"found {len(label_instances)} entries")
 
+    time_start = dt.datetime.now()
     if threads > 0:
+        logger.info(f"generating using (up to) {threads} threads...")
         with concurrent.futures.ThreadPoolExecutor(
             thread_name_prefix="LabelCreateExecutor", max_workers=threads
         ) as executor:
@@ -96,14 +105,22 @@ def handle_csv_input(
             }
         concurrent.futures.wait(futures)
     else:
-        for label in label_instances:
+        for idx, label in enumerate(label_instances, 1):
+            logger.info(f"generating file {idx}/{len(label_instances)}")
             label.generate_stl(output_dir)
+    duration = dt.datetime.now() - time_start
+    average = duration.total_seconds() / len(label_instances)
+    logger.info(
+        f"done! generation took {duration.total_seconds():.1f}s ({average:.3f}s per label)"
+    )
 
 
 def openscad_binary_found() -> bool:
     """Return True if the binary was found."""
     ret = subprocess.run(["openscad", "--version"], capture_output=True)
     binary_found = "OpenSCAD" in str(ret.stderr) and ret.returncode == 0
+    if binary_found:
+        logger.info(f"found this SCAD: {ret.stderr.decode().strip()}")
     return binary_found
 
 
@@ -150,4 +167,5 @@ def run_main():
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     run_main()
