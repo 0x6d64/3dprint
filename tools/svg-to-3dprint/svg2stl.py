@@ -1,4 +1,3 @@
-import sys
 import argparse
 import numpy as np
 from PIL import Image
@@ -6,7 +5,7 @@ import cairosvg
 from stl import mesh
 
 
-def svg_to_png(svg_path: str, png_path: str, dpi: int = 300):
+def svg_to_png(svg_path: str, png_path: str, dpi: int = 600):
     cairosvg.svg2png(url=svg_path, write_to=png_path, dpi=dpi)
 
 
@@ -40,42 +39,40 @@ def generate_height_map(gray_image: Image.Image,
 def height_map_to_mesh(height_map: np.ndarray, alpha_mask: np.ndarray,
                        scale: float = 1.0) -> mesh.Mesh:
     rows, cols = height_map.shape
-    vertices = []
-    vertex_indices = -np.ones((rows, cols), dtype=int)  # -1 means no vertex (transparent)
-    faces = []
 
-    def vertex_index(r, c):
-        return vertex_indices[r, c]
+    # Create vertex indices: valid pixels get an index, transparent pixels -1
+    valid = alpha_mask.astype(bool)
+    vertex_indices = -np.ones((rows, cols), dtype=int)
+    vertex_indices[valid] = np.arange(np.count_nonzero(valid))
 
-    # Create vertices only for non-transparent pixels
-    idx = 0
-    for r in range(rows):
-        for c in range(cols):
-            if alpha_mask[r, c]:  # Only add vertex if not transparent
-                z = height_map[r, c]
-                vertices.append([c * scale, r * scale, z])
-                vertex_indices[r, c] = idx
-                idx += 1
+    # Create vertices for valid pixels
+    rr, cc = np.nonzero(valid)
+    vertices = np.zeros((len(rr), 3), dtype=np.float32)
+    vertices[:, 0] = cc * scale  # x
+    vertices[:, 1] = rr * scale  # y
+    vertices[:, 2] = height_map[rr, cc]  # z
 
-    vertices = np.array(vertices)
+    # Find all valid quads (4 corners are valid)
+    valid_quads = (
+        valid[:-1, :-1] & valid[:-1, 1:] &
+        valid[1:, :-1] & valid[1:, 1:]
+    )
 
-    # Create faces only if all corners are valid (non-transparent)
-    for r in range(rows - 1):
-        for c in range(cols - 1):
-            if (vertex_index(r, c) == -1 or
-                vertex_index(r, c + 1) == -1 or
-                vertex_index(r + 1, c) == -1 or
-                vertex_index(r + 1, c + 1) == -1):
-                continue  # Skip faces with transparent corners
+    quad_rows, quad_cols = np.nonzero(valid_quads)
 
-            v0 = vertex_index(r, c)
-            v1 = vertex_index(r, c + 1)
-            v2 = vertex_index(r + 1, c)
-            v3 = vertex_index(r + 1, c + 1)
-            faces.append([v0, v1, v2])
-            faces.append([v1, v3, v2])
+    # Preallocate faces array (2 triangles per quad)
+    faces = np.zeros((len(quad_rows) * 2, 3), dtype=int)
 
-    faces = np.array(faces)
+    for i, (r, c) in enumerate(zip(quad_rows, quad_cols)):
+        v0 = vertex_indices[r, c]
+        v1 = vertex_indices[r, c + 1]
+        v2 = vertex_indices[r + 1, c]
+        v3 = vertex_indices[r + 1, c + 1]
+
+        faces[2*i] = [v0, v1, v2]
+        faces[2*i + 1] = [v1, v3, v2]
+
+    # Create STL mesh
     stl_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
     for i, face in enumerate(faces):
         for j in range(3):
@@ -84,15 +81,15 @@ def height_map_to_mesh(height_map: np.ndarray, alpha_mask: np.ndarray,
     return stl_mesh
 
 
-def main(svg_file, color_count, base_height, step_height, output_file):
+def main(svg_file, color_count, base_height, step_height, output_file,
+         dpi=600):
     png_file = svg_file + ".temp.png"
-    svg_to_png(svg_file, png_file)
+    svg_to_png(svg_file, png_file, dpi=dpi)
 
     img = Image.open(png_file)
     gray_img = quantize_to_grayscale(img, color_count)
     height_map = generate_height_map(gray_img, base_height, step_height, color_count)
 
-    # Extract alpha mask from original image: True = opaque/semi-opaque, False = fully transparent
     alpha_mask = np.array(img.convert('RGBA'))[..., 3] > 0
 
     stl_mesh = height_map_to_mesh(height_map, alpha_mask)
@@ -109,7 +106,9 @@ if __name__ == "__main__":
                         help="Base height for the lightest color")
     parser.add_argument("--step_height", type=float, default=0.5,
                         help="Additional height per darker step")
+    parser.add_argument("--dpi", type=int, default=6000,
+                        help="Rasterization DPI (higher = higher resolution)")
     args = parser.parse_args()
 
     main(args.svg_file, args.color_count, args.base_height,
-         args.step_height, args.output_file)
+         args.step_height, args.output_file, args.dpi)
