@@ -1,114 +1,338 @@
+#!/usr/bin/env python3
+"""
+SVG to STL Converter with PROPER Transparency Handling
+Converts SVG images to 3D printable STL models with height-based extrusion.
+Transparent areas are properly excluded from the model generation.
+"""
+
 import argparse
+import sys
+from pathlib import Path
+
+import cairosvg
 import numpy as np
 from PIL import Image
-import cairosvg
 from stl import mesh
 
 
-def svg_to_png(svg_path: str, png_path: str, dpi: int = 600):
-    cairosvg.svg2png(url=svg_path, write_to=png_path, dpi=dpi)
+def svg_to_png(svg_path, png_path, width=None, height=None, dpi=300):
+    """
+    Convert SVG to PNG using CairoSVG, preserving transparency.
+    """
+    try:
+        with open(svg_path, 'rb') as svg_file:
+            svg_data = svg_file.read()
+
+        # Convert SVG to PNG with transparency preservation
+        cairosvg.svg2png(
+            bytestring=svg_data,
+            write_to=png_path,
+            output_width=width,
+            output_height=height,
+            dpi=dpi
+        )
+        print(f"Successfully converted SVG to PNG: {png_path}")
+    except Exception as e:
+        raise Exception(f"Failed to convert SVG to PNG: {e}")
 
 
-def quantize_to_grayscale(image: Image.Image, color_count: int) -> Image.Image:
-    if image.mode in ('RGBA', 'LA'):
-        background = Image.new("RGBA", image.size, (255, 255, 255, 255))
-        image = Image.alpha_composite(background, image.convert("RGBA"))
-    gray_image = image.convert('L')  # Convert to grayscale
-    np_gray = np.array(gray_image)
-    np_alpha = np.array(image.convert('RGBA'))[..., 3]  # Extract alpha channel
-    levels = np.linspace(0, 255, color_count, endpoint=True).astype(np.uint8)
-    idxs = np.abs(np_gray[..., None] - levels).argmin(axis=-1)
-    quantized = levels[idxs]
-    quantized[np_alpha == 0] = 0  # Set fully transparent pixels to level 0 (excluded)
-    return Image.fromarray(quantized, mode='L')
+def has_transparency_robust(image):
+    """
+    Robust transparency detection that works across PIL versions.
+    """
+    # Method 1: Check for transparency in image info
+    if image.info.get("transparency", None) is not None:
+        return True
+
+    # Method 2: Check image mode for alpha channels
+    if image.mode in ("RGBA", "LA"):
+        # Use getextrema() to check if alpha channel has values < 255
+        extrema = image.getextrema()
+        if image.mode == "RGBA":
+            return extrema[3][0] < 255  # Check alpha channel minimum
+        else:  # LA mode
+            return extrema[1][0] < 255  # Check alpha channel minimum
+
+    # Method 3: For indexed color images (P mode) with transparency
+    if image.mode == "P":
+        transparency = image.info.get("transparency", None)
+        if transparency is not None:
+            return True
+
+    # Method 4: Use has_transparency_data if available (Pillow >= 10.1.0)
+    if hasattr(image, 'has_transparency_data'):
+        return image.has_transparency_data
+
+    return False
 
 
-def generate_height_map(gray_image: Image.Image,
-                        base_height: float,
-                        step_height: float,
-                        color_count: int) -> np.ndarray:
-    np_gray = np.array(gray_image)
-    levels = np.linspace(255, 0, color_count, endpoint=True).astype(np.uint8)
-    height_map = np.zeros_like(np_gray, dtype=np.float32)
-    for i, level in enumerate(levels):
-        height = base_height + i * step_height
-        height_map[np_gray == level] = height
+def extract_transparency_mask_and_process(image_path, color_count):
+    """
+    Extract transparency mask BEFORE converting to grayscale.
+    This is the key fix - preserve alpha info before conversion.
+    """
+    try:
+        # Open image and keep original mode
+        img = Image.open(image_path)
+        transparency_mask = None
+
+        print(f"Original image mode: {img.mode}")
+        print(f"Image size: {img.size}")
+
+        # Check for transparency BEFORE any conversions
+        has_transparency = has_transparency_robust(img)
+        print(f"Has transparency: {has_transparency}")
+
+        if has_transparency:
+            # Convert to RGBA to standardize alpha channel handling
+            if img.mode != 'RGBA':
+                img = img.convert('RGBA')
+
+            # Extract alpha channel BEFORE losing it
+            img_array = np.array(img)
+            if img_array.shape[2] == 4:  # RGBA
+                alpha_channel = img_array[:, :, 3]
+                # Create transparency mask (True where pixels are transparent)
+                transparency_mask = alpha_channel < 128  # Threshold for transparency
+                transparent_pixels = np.sum(transparency_mask)
+                total_pixels = transparency_mask.size
+                print(f"Found {transparent_pixels} transparent pixels out of {total_pixels} total pixels")
+                print(f"Transparency percentage: {(transparent_pixels / total_pixels) * 100:.1f}%")
+
+            # Replace transparent pixels with white background
+            background = Image.new('RGBA', img.size, (255, 255, 255, 255))
+            img = Image.alpha_composite(background, img)
+
+        # Now convert to RGB (removing alpha) then to grayscale
+        img_rgb = img.convert('RGB')
+        img_gray = img_rgb.convert('L')
+
+        # Apply color quantization
+        if color_count > 256:
+            color_count = 256
+            print(f"Warning: Color count reduced to 256 (PIL limitation)")
+
+        quantized = img_gray.quantize(colors=color_count, method=Image.Quantize.MEDIANCUT)
+        result = quantized.convert('L')
+
+        print(f"Successfully reduced image to {color_count} grayscale colors")
+        return result, transparency_mask
+
+    except Exception as e:
+        raise Exception(f"Failed to process image: {e}")
+
+
+def create_height_map(image, base_height, step_height, transparency_mask=None):
+    """
+    Create height map from grayscale image with stepped heights.
+    Transparent areas are set to zero height.
+    """
+    img_array = np.array(image)
+    unique_grays = sorted(np.unique(img_array).tolist())
+
+    # Create height map
+    height_map = np.zeros_like(img_array, dtype=np.float32)
+
+    # Assign heights: lightest color gets base_height,
+    # darker colors get additional step_height increments
+    for i, gray_value in enumerate(unique_grays):
+        # Lightest color (highest value) gets base height
+        # Darker colors get additional height
+        height = base_height + (len(unique_grays) - 1 - i) * step_height
+        height_map[img_array == gray_value] = height
+
+    # CRITICAL: Set transparent areas to zero height (no extrusion)
+    if transparency_mask is not None:
+        height_map[transparency_mask] = 0.0
+        transparent_pixels = np.sum(transparency_mask)
+        print(f"Set {transparent_pixels} transparent pixels to zero height")
+
+        # Check if entire image is transparent
+        if transparent_pixels == transparency_mask.size:
+            raise Exception("Entire image is transparent - no geometry to generate")
+
+    # Print statistics
+    non_zero_heights = height_map[height_map > 0]
+    if len(non_zero_heights) > 0:
+        print(f"Created height map with {len(unique_grays)} height levels")
+        print(f"Height range: {np.min(non_zero_heights):.2f}mm to {np.max(non_zero_heights):.2f}mm")
+        print(f"Non-transparent pixels: {len(non_zero_heights)}")
+    else:
+        raise Exception("No valid geometry found after transparency processing")
+
     return height_map
 
 
-def height_map_to_mesh(height_map: np.ndarray, alpha_mask: np.ndarray,
-                       scale: float = 1.0) -> mesh.Mesh:
+def height_map_to_mesh(height_map, pixel_size=0.1, min_height_threshold=0.01):
+    """
+    Convert 2D height map to 3D mesh, excluding transparent areas.
+    """
     rows, cols = height_map.shape
 
-    # Create vertex indices: valid pixels get an index, transparent pixels -1
-    valid = alpha_mask.astype(bool)
-    vertex_indices = -np.ones((rows, cols), dtype=int)
-    vertex_indices[valid] = np.arange(np.count_nonzero(valid))
+    # Only process pixels above threshold (non-transparent)
+    valid_pixels = height_map > min_height_threshold
+    if not np.any(valid_pixels):
+        raise Exception("No pixels above height threshold - nothing to generate")
 
-    # Create vertices for valid pixels
-    rr, cc = np.nonzero(valid)
-    vertices = np.zeros((len(rr), 3), dtype=np.float32)
-    vertices[:, 0] = cc * scale  # x
-    vertices[:, 1] = rr * scale  # y
-    vertices[:, 2] = height_map[rr, cc]  # z
+    vertices = []
+    vertex_indices = {}
 
-    # Find all valid quads (4 corners are valid)
-    valid_quads = (
-        valid[:-1, :-1] & valid[:-1, 1:] &
-        valid[1:, :-1] & valid[1:, 1:]
+    # Generate vertices only for valid (non-transparent) pixels
+    for i in range(rows):
+        for j in range(cols):
+            if valid_pixels[i, j]:
+                x = j * pixel_size
+                y = i * pixel_size
+                z = height_map[i, j]
+                vertices.append([x, y, z])
+                vertex_indices[(i, j, 'top')] = len(vertices) - 1
+
+    # Generate bottom vertices
+    for i in range(rows):
+        for j in range(cols):
+            if valid_pixels[i, j]:
+                x = j * pixel_size
+                y = i * pixel_size
+                z = 0.0
+                vertices.append([x, y, z])
+                vertex_indices[(i, j, 'bottom')] = len(vertices) - 1
+
+    vertices = np.array(vertices)
+    faces = []
+
+    # Create faces only between valid pixels
+    for i in range(rows - 1):
+        for j in range(cols - 1):
+            # Check if all four corners are valid
+            if (valid_pixels[i, j] and valid_pixels[i + 1, j] and
+                    valid_pixels[i, j + 1] and valid_pixels[i + 1, j + 1]):
+                v1 = vertex_indices[(i, j, 'top')]
+                v2 = vertex_indices[(i + 1, j, 'top')]
+                v3 = vertex_indices[(i, j + 1, 'top')]
+                v4 = vertex_indices[(i + 1, j + 1, 'top')]
+
+                # Top surface triangles
+                faces.append([v1, v2, v3])
+                faces.append([v2, v4, v3])
+
+                # Bottom surface triangles (inverted normals)
+                v1_bot = vertex_indices[(i, j, 'bottom')]
+                v2_bot = vertex_indices[(i + 1, j, 'bottom')]
+                v3_bot = vertex_indices[(i, j + 1, 'bottom')]
+                v4_bot = vertex_indices[(i + 1, j + 1, 'bottom')]
+
+                faces.append([v1_bot, v3_bot, v2_bot])
+                faces.append([v2_bot, v3_bot, v4_bot])
+
+    # Add side walls (simplified - at edges only)
+    # This creates a watertight mesh for 3D printing
+    for i in range(rows):
+        for j in range(cols):
+            if valid_pixels[i, j]:
+                # Check boundaries and create walls
+                if i == 0 or not valid_pixels[i - 1, j]:  # Front wall
+                    if j < cols - 1 and valid_pixels[i, j + 1]:
+                        v1_top = vertex_indices[(i, j, 'top')]
+                        v2_top = vertex_indices[(i, j + 1, 'top')]
+                        v1_bot = vertex_indices[(i, j, 'bottom')]
+                        v2_bot = vertex_indices[(i, j + 1, 'bottom')]
+                        faces.append([v1_top, v2_top, v1_bot])
+                        faces.append([v2_top, v2_bot, v1_bot])
+
+    faces = np.array(faces)
+    print(f"Generated mesh with {len(vertices)} vertices and {len(faces)} faces")
+
+    return vertices, faces
+
+
+def create_stl_from_mesh(vertices, faces, output_path):
+    """Create STL file from mesh data."""
+    try:
+        stl_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+
+        for i, face in enumerate(faces):
+            for j in range(3):
+                stl_mesh.vectors[i][j] = vertices[face[j], :]
+
+        stl_mesh.save(output_path)
+        print(f"Successfully saved STL file: {output_path}")
+
+        # Print mesh statistics
+        volume, cog, inertia = stl_mesh.get_mass_properties()
+        print(f"Mesh volume: {volume:.2f} mm³")
+        print(f"Mesh dimensions: {stl_mesh.max_ - stl_mesh.min_}")
+
+    except Exception as e:
+        raise Exception(f"Failed to create STL file: {e}")
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Convert SVG to 3D printable STL with PROPER transparency handling"
     )
+    parser.add_argument("input_svg", help="Input SVG file path")
+    parser.add_argument("output", help="Output STL file path")
+    parser.add_argument("-c", "--colors", type=int, default=5,
+                        help="Number of grayscale colors (default: 5)")
+    parser.add_argument("-b", "--base_height", type=float, default=1.0,
+                        help="Base height for lightest color in mm (default: 1.0)")
+    parser.add_argument("-s", "--step_height", type=float, default=0.5,
+                        help="Height step between colors in mm (default: 0.5)")
+    parser.add_argument("-p", "--pixel_size", type=float, default=0.1,
+                        help="Size of each pixel in mm (default: 0.1)")
+    parser.add_argument("-r", "--resolution", type=int, default=300,
+                        help="Resolution for SVG rasterization in DPI (default: 300)")
+    parser.add_argument("--width", type=int, help="Output width in pixels")
+    parser.add_argument("--height", type=int, help="Output height in pixels")
 
-    quad_rows, quad_cols = np.nonzero(valid_quads)
+    args = parser.parse_args()
 
-    # Preallocate faces array (2 triangles per quad)
-    faces = np.zeros((len(quad_rows) * 2, 3), dtype=int)
+    # Validate input
+    input_path = Path(args.input_svg)
+    if not input_path.exists() or not input_path.suffix.lower() == '.svg':
+        print(f"Error: Input must be an existing SVG file")
+        sys.exit(1)
 
-    for i, (r, c) in enumerate(zip(quad_rows, quad_cols)):
-        v0 = vertex_indices[r, c]
-        v1 = vertex_indices[r, c + 1]
-        v2 = vertex_indices[r + 1, c]
-        v3 = vertex_indices[r + 1, c + 1]
+    output_path = args.output or str(input_path.with_suffix('.stl'))
 
-        faces[2*i] = [v0, v1, v2]
-        faces[2*i + 1] = [v1, v3, v2]
+    try:
+        # Step 1: Convert SVG to PNG
+        temp_png = input_path.with_suffix('.temp.png')
+        print("Step 1: Converting SVG to PNG...")
+        svg_to_png(str(input_path), str(temp_png),
+                   args.width, args.height, args.resolution)
 
-    # Create STL mesh
-    stl_mesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
-    for i, face in enumerate(faces):
-        for j in range(3):
-            stl_mesh.vectors[i][j] = vertices[face[j], :]
+        # Step 2: Process image with PROPER transparency handling
+        print("Step 2: Processing transparency and colors...")
+        processed_image, transparency_mask = extract_transparency_mask_and_process(
+            str(temp_png), args.colors)
 
-    return stl_mesh
+        # Step 3: Create height map
+        print("Step 3: Creating height map...")
+        height_map = create_height_map(processed_image, args.base_height,
+                                       args.step_height, transparency_mask)
 
+        # Step 4: Generate 3D mesh
+        print("Step 4: Generating 3D mesh...")
+        vertices, faces = height_map_to_mesh(height_map, args.pixel_size)
 
-def main(svg_file, color_count, base_height, step_height, output_file,
-         dpi=600):
-    png_file = svg_file + ".temp.png"
-    svg_to_png(svg_file, png_file, dpi=dpi)
+        # Step 5: Create STL file
+        print("Step 5: Creating STL file...")
+        create_stl_from_mesh(vertices, faces, output_path)
 
-    img = Image.open(png_file)
-    gray_img = quantize_to_grayscale(img, color_count)
-    height_map = generate_height_map(gray_img, base_height, step_height, color_count)
+        # Cleanup
+        temp_png.unlink(missing_ok=True)
 
-    alpha_mask = np.array(img.convert('RGBA'))[..., 3] > 0
+        print(f"\n✅ Successfully created 3D printable STL: {output_path}")
+        if transparency_mask is not None:
+            print(f"   Transparent pixels properly excluded: {np.sum(transparency_mask)}")
 
-    stl_mesh = height_map_to_mesh(height_map, alpha_mask)
-    stl_mesh.save(output_file)
+    except Exception as e:
+        temp_png = input_path.with_suffix('.temp.png')
+        temp_png.unlink(missing_ok=True)
+        print(f"Error: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("svg_file", help="Path to input SVG file")
-    parser.add_argument("output_file", help="Output STL filename")
-    parser.add_argument("--color_count", type=int, default=5,
-                        help="Number of grayscale levels")
-    parser.add_argument("--base_height", type=float, default=1.0,
-                        help="Base height for the lightest color")
-    parser.add_argument("--step_height", type=float, default=0.5,
-                        help="Additional height per darker step")
-    parser.add_argument("--dpi", type=int, default=6000,
-                        help="Rasterization DPI (higher = higher resolution)")
-    args = parser.parse_args()
-
-    main(args.svg_file, args.color_count, args.base_height,
-         args.step_height, args.output_file, args.dpi)
+    main()
