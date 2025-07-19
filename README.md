@@ -14,15 +14,15 @@ furniture).
 
 ### Brackets and holders
 * [cockpit clock enclosure](projects/brackets_holders/cockpit-clocks/cockpit-clock-enclosure): 
-  an enclosure in order to put an airplane cockpit 
+  an enclosure to put an airplane cockpit 
   clock on your desk. See also the [project on printables.com](
   https://www.printables.com/model/292694-cockpit-clock-enclosure).
-* [essential oil bottle holder](projects/brackets_holders/essential-oil-holder): a slab with 8
+* [essential oil bottle holder](projects/brackets_holders/essential-oil-holder): a slab with eight
   holes that serves as a holder for essential oil bottles. See also
   [project on printables.com](
   https://www.printables.com/model/349100-holder-for-essential-oil-bottles).
 * [filament wall hook](projects/brackets_holders/filament-wall-hook): a small part that accepts
-  a 32mm PCV pipe in order to keep filament spools. Also see the 
+  a 32 mm PCV pipe to keep filament spools. Also see the 
   [project on printables.com](
   https://www.printables.com/model/316022-wall-hook-for-filament-spool-storage).
 * [LED remote holder](projects/brackets_holders/led-remote-holder): a holder for a LED light
@@ -72,7 +72,7 @@ in the folder [/projects/gridfinity](./projects/gridfinity).
   royal game of ur. Also see the [project on printables.com](
   https://www.printables.com/model/349837-container-for-game-of-ur-material)
 * [belt clip for Victorinox Swisstool pouch](projects/misc_projects/swisstool-pocket-clip)
-  A clip that can be quickly attached or detachted to a belt. See also the
+  A clip that can be quickly attached or detached to a belt. See also the
   [project on printables.com](https://www.printables.com/model/440875-victorinox-swisstool-belt-clip)
 
 ### Project ideas
