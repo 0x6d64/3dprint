@@ -18,11 +18,9 @@ further improvements:
 - complete implementation that compresses old gcode files
 """
 
-
 _log = logging.getLogger(__name__)
 _log.addHandler(logging.StreamHandler())
 _log.setLevel(logging.DEBUG)
-
 
 FolderDate = namedtuple("FolderDate", ["year", "month"])
 
@@ -79,31 +77,26 @@ def get_parsed_args() -> argparse.Namespace:
 
 
 def _get_old_monthly_folders(
-    basedir: pathlib.Path, min_age_months=1
+        basedir: pathlib.Path, min_age_months=1
 ) -> List[pathlib.Path]:
     retval = []
 
-    if not basedir.exists():
-        _log.error(f"basedir is not a dir {basedir}")
-    else:
-        for item in basedir.iterdir():
-            if not item.is_dir():
+    for year_folder in (x for x in basedir.iterdir() if x.is_dir()):
+        for item in (x for x in year_folder.iterdir() if x.is_dir()):
+            date = _get_date_from_path(item)
+            if not date:
                 continue
+            age_in_months = month_difference(
+                datetime.datetime.now().year,
+                datetime.datetime.now().month,
+                date.year,
+                date.month,
+            )
+            if age_in_months >= min_age_months:
+                _log.info(f"found candidate: {str(item)}")
+                retval.append(item)
             else:
-                date = _get_date_from_path(item)
-                if not date:
-                    continue
-                age_in_months = month_difference(
-                    datetime.datetime.now().year,
-                    datetime.datetime.now().month,
-                    date.year,
-                    date.month,
-                )
-                if age_in_months >= min_age_months:
-                    _log.info(f"found candidate: {str(item)}")
-                    retval.append(item)
-                else:
-                    _log.debug(f"item too young: {str(item)}")
+                _log.debug(f"item too young: {str(item)}")
     return retval
 
 
@@ -135,7 +128,7 @@ def _get_date_from_path(path: pathlib.Path) -> Union[FolderDate, None]:
 
 
 def discover_old_input_directories(
-    basedir: pathlib.Path, min_age_months=2
+        basedir: pathlib.Path, min_age_months=2
 ) -> list[pathlib.Path]:
     old_month_folder = _get_old_monthly_folders(
         basedir=basedir, min_age_months=min_age_months
@@ -147,7 +140,7 @@ def discover_old_input_directories(
                 continue
             for input_folder_candidate in project_candidate.iterdir():
                 if input_folder_candidate.is_dir() and str(
-                    input_folder_candidate.stem
+                        input_folder_candidate.stem
                 ).startswith("input"):
                     old_input_folders.append(input_folder_candidate)
     return old_input_folders
@@ -198,7 +191,7 @@ def compress_input_folders(basedir: pathlib.Path, min_age_months=2) -> Compressi
 
 
 def _archive_and_delete_gcode_in_dir(
-    input_folder: pathlib.Path, archive_name
+        input_folder: pathlib.Path, archive_name
 ) -> CompressionStats:
     all_gcode_files = list(input_folder.glob("*.{gcode,bgcode}"))
     all_gcode_sizes = [f.stat().st_size for f in all_gcode_files if f.is_file()]
@@ -226,7 +219,7 @@ def _archive_and_delete_gcode_in_dir(
 
 
 def compress_and_delete_gcode_files(
-    basedir: pathlib.Path, min_age_months=2
+        basedir: pathlib.Path, min_age_months=2
 ) -> CompressionStats:
     old_month_folders = _get_old_monthly_folders(basedir, min_age_months=min_age_months)
     compression_stats = []
