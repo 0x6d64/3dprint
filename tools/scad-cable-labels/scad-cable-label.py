@@ -29,7 +29,7 @@ class ScadLabel:
         return Path(out_dir) / filename
 
     @staticmethod
-    def _get_flattended_cmd(cmd_raw):
+    def _get_flattened_cmd(cmd_raw):
         """Transform nested list of parameters into a flat list for subprocess.run."""
         cmd_flattened = []
         for item in cmd_raw:
@@ -65,7 +65,7 @@ class ScadLabel:
         ]
         # fmt: on
         logger.info(f"generating {self._get_output_path(output_dir)}")
-        ret = subprocess.run(self._get_flattended_cmd(cmd_raw), capture_output=True)
+        ret = subprocess.run(self._get_flattened_cmd(cmd_raw), capture_output=True)
         success = 0 == ret.returncode
         _out, _err = ret.stdout.decode(), ret.stderr.decode()
         _json_stats = json.loads(_out) if success else []
