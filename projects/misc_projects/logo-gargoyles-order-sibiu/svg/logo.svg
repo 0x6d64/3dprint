@@ -25,7 +25,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.53050295"
-     inkscape:cx="1026.3845"
+     inkscape:cx="1025.442"
      inkscape:cy="1036.752"
      inkscape:window-width="1718"
      inkscape:window-height="1378"
@@ -85,7 +85,8 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="background"
-     sodipodi:insensitive="true">
+     sodipodi:insensitive="true"
+     style="display:none">
     <rect
        style="fill:#00ff00;fill-opacity:0.655602;stroke-width:0.264999;stroke-opacity:0.669154"
        id="rect1"
