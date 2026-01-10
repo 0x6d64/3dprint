@@ -39,7 +39,7 @@ class CompressionStats:
     def saved(self):
         return self.uncompressed - self.compressed
 
-    def __add__(self, other):
+    def __add__(self, other: "CompressionStats") -> "CompressionStats":
         if other == 0:  # happens when we create a sum of the class
             other = CompressionStats()
         return CompressionStats(
@@ -163,9 +163,9 @@ def _check_archive_for_errors(a: pathlib.Path):
 def compress_and_delete_folder(input_list: List[pathlib.Path]) -> CompressionStats:
     size_uncompressed, size_compressed = 0.0, 0.0
     for item in input_list:
-        archive_path = shutil.make_archive(
+        archive_path = pathlib.Path(shutil.make_archive(
             str(item), format="zip", root_dir=str(item), logger=_log
-        )
+        ))
         _check_archive_for_errors(archive_path)
 
         item_uncompressed = get_folder_size(item)
@@ -185,7 +185,7 @@ def compress_and_delete_folder(input_list: List[pathlib.Path]) -> CompressionSta
 
 
 def compress_input_folders(basedir: pathlib.Path, min_age_months=2) -> CompressionStats:
-    input_dirs_to_compress = discover_old_input_directories(basedir)
+    input_dirs_to_compress = discover_old_input_directories(basedir, min_age_months=min_age_months)
     stats = compress_and_delete_folder(input_dirs_to_compress)
     return stats
 
@@ -232,7 +232,7 @@ def compress_and_delete_gcode_files(
             )
             c_stat = _archive_and_delete_gcode_in_dir(project__candidate, archive_name)
             compression_stats.append(c_stat)
-    return sum(compression_stats)
+    return sum(compression_stats, CompressionStats())
 
 
 def run_main(args: argparse.Namespace):
